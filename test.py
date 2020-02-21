@@ -24,7 +24,6 @@ def genSheet1(sheet, files, nfes):
         tree = ET.parse(filename)
         root = tree.getroot()
 
-        # print(filename)
         namespace = '{http://www.portalfiscal.inf.br/nfe}'
 
         if root.tag != namespace + 'nfeProc':
