@@ -1,9 +1,7 @@
 import os
 import xlwt
 import xml.etree.ElementTree as ET
-import pandas as pd
-
-
+# import pandas as pd
 
 
 def formatarDataHora(dataHora):
@@ -17,6 +15,7 @@ def formatarDataHora(dataHora):
     return dia + '/' + mes + '/' + ano + ' ' + \
         hor + ':' + min + ':' + seg
 
+
 def genSheet1(sheet, files, nfes):
 
     linha = 0
@@ -25,10 +24,9 @@ def genSheet1(sheet, files, nfes):
         tree = ET.parse(filename)
         root = tree.getroot()
 
-        print(filename)
+        # print(filename)
         namespace = '{http://www.portalfiscal.inf.br/nfe}'
 
-        
         if root.tag != namespace + 'nfeProc':
             print('Nao achou')
         else:
@@ -36,34 +34,45 @@ def genSheet1(sheet, files, nfes):
             infNFe = NFe.findall(namespace + 'infNFe')[0]
             ide = infNFe.findall(namespace + 'ide')[0]
             emit = infNFe.findall(namespace + 'emit')[0]
-            det = infNFe.findall(namespace + 'det')[0]
-            prod = det.findall(namespace + 'prod')[0]         
-            imp = det.findall(namespace + 'imposto')[0]
-            icms = imp.findall(namespace + 'ICMS')[0]         
-            icms_sub = icms.findall(namespace + 'ICMS')[0]
+            pos = 0
+            hasNext = True
+            while hasNext:
+                det = infNFe.findall(namespace + 'det')[pos]
+                prod = det.findall(namespace + 'prod')[0]
+                imp = det.findall(namespace + 'imposto')[0]
+                icms = imp.findall(namespace + 'ICMS')[0]
+                icms_sub = icms[0]
 
-#children
-            CRT = emit.find(namespace + 'CRT').text
-            ncm = prod.find(namespace + 'NCM').text
-            cfop = prod.find(namespace + 'CFOP').text
-            xprod = prod.find(namespace + 'xProd').text
-            
-            if icms_sub.find(namespace + 'pICMS') is not None:
-                picms_cst = icms_sub.find(namespace + 'pICMS').text
-            else:
-                picms_cst = icms_sub.find(namespace + 'CST').text
-           
-            linha += 1
+                # children
+                CRT = emit.find(namespace + 'CRT').text
+                ncm = prod.find(namespace + 'NCM').text
+                cfop = prod.find(namespace + 'CFOP').text
+                xprod = prod.find(namespace + 'xProd').text
 
-            sheet.write(linha, 0, CRT)
-            sheet.write(linha, 1, ncm)
-            sheet.write(linha, 2, cfop)
-            sheet.write(linha, 3, xprod)
-            sheet.write(linha, 4, picms_cst)
-            sheet.write(linha, 5, formatarDataHora(ide.find(namespace + 'dhEmi').text))
+                picms_cst = 0
+                if icms_sub.find(namespace + 'pICMS') is not None:
+                    picms_cst = float(icms_sub.find(namespace + 'pICMS').text)
 
+                linha += 1
 
-            print (CRT + '\t' + ncm + '\t' + cfop +'\t' + xprod +'\t' + '\t' + picms_cst +'\t' + formatarDataHora(ide.find(namespace + 'dhEmi').text))
+                sheet.write(linha, 0, CRT)
+                sheet.write(linha, 1, ncm)
+                sheet.write(linha, 2, cfop)
+                sheet.write(linha, 3, xprod)
+                sheet.write(linha, 4, picms_cst)
+                sheet.write(linha, 5, formatarDataHora(
+                    ide.find(namespace + 'dhEmi').text))
+
+                print(CRT + '\t' + ncm + '\t' + cfop + '\t' + xprod + '\t' +
+                      '\t' + str(picms_cst) + '\t' + formatarDataHora(
+                        ide.find(namespace + 'dhEmi').text))
+
+                pos = pos + 1
+                try:
+                    infNFe.findall(namespace + 'det')[pos]
+                    hasNext = True
+                except Exception:
+                    hasNext = False
 
 
 nfes = {}
